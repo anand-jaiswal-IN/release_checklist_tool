@@ -133,7 +133,7 @@ export default function ReleasesTable() {
                 </TableCell>
                 <TableCell align="right">{release.version}</TableCell>
                 <TableCell align="right">
-                  {new Date(release.releaseDate).toLocaleDateString()}
+                  {new Date(release.releaseDate).toLocaleDateString('en-US')}
                 </TableCell>
                 <TableCell align="right">
                   <Chip

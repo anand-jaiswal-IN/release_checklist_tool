@@ -232,6 +232,13 @@ export default function ViewRelease() {
         />
       </Box>
 
+      {/* Error Alert */}
+      {error && (
+        <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
       {/* Header */}
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={3}>
         <Button
@@ -369,7 +376,7 @@ export default function ViewRelease() {
                       Release Date
                     </Typography>
                     <Typography variant="h6">
-                      {new Date(releaseData.releaseDate).toLocaleDateString()}
+                      {new Date(releaseData.releaseDate).toLocaleDateString('en-US')}
                     </Typography>
                   </Box>
                   <Box>

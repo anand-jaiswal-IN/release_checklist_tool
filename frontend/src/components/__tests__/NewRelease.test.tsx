@@ -174,8 +174,32 @@ describe('NewRelease Component', () => {
     const user = userEvent.setup();
     const mockApiService = vi.mocked(apiService);
     
+    const mockNewRelease = {
+      id: 1,
+      releaseName: 'Test',
+      version: '1.0.0',
+      releaseDate: '2026-03-01',
+      remarks: null,
+      checklist: {
+        prsMerged: false,
+        changelogUpdated: false,
+        testsPassing: false,
+        githubReleaseCreated: false,
+        deployedDemo: false,
+        testedDemo: false,
+        deployedProduction: false,
+      },
+      checklistProgress: {
+        total: 7,
+        completed: 0,
+        percentage: 0,
+      },
+      createdAt: '2026-02-22T00:00:00.000Z',
+      updatedAt: '2026-02-22T00:00:00.000Z',
+    };
+    
     mockApiService.createRelease.mockImplementation(
-      () => new Promise((resolve) => setTimeout(resolve, 100))
+      () => new Promise((resolve) => setTimeout(() => resolve(mockNewRelease), 100))
     );
 
     renderComponent();

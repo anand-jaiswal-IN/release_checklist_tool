@@ -62,7 +62,7 @@ describe('ViewRelease Component', () => {
     renderComponentWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText('Test Release v1.0')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Release v1.0')[0]).toBeInTheDocument();
     });
 
     expect(screen.getByText('1.0.0')).toBeInTheDocument();
@@ -131,7 +131,7 @@ describe('ViewRelease Component', () => {
     renderComponentWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText('Test Release v1.0')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Release v1.0')[0]).toBeInTheDocument();
     });
 
     const editButton = screen.getByRole('button', { name: /Edit Release/i });
@@ -150,7 +150,7 @@ describe('ViewRelease Component', () => {
     renderComponentWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText('Test Release v1.0')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Release v1.0')[0]).toBeInTheDocument();
     });
 
     // Enter edit mode
@@ -177,7 +177,7 @@ describe('ViewRelease Component', () => {
     renderComponentWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText('Test Release v1.0')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Release v1.0')[0]).toBeInTheDocument();
     });
 
     // Enter edit mode
@@ -206,7 +206,7 @@ describe('ViewRelease Component', () => {
     renderComponentWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText('Test Release v1.0')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Release v1.0')[0]).toBeInTheDocument();
     });
 
     // Enter edit mode
@@ -236,7 +236,7 @@ describe('ViewRelease Component', () => {
     renderComponentWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText('Test Release v1.0')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Release v1.0')[0]).toBeInTheDocument();
     });
 
     const deleteButton = screen.getByRole('button', { name: /Delete/i });
@@ -260,7 +260,7 @@ describe('ViewRelease Component', () => {
     renderComponentWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText('Test Release v1.0')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Release v1.0')[0]).toBeInTheDocument();
     });
 
     // Click delete button
@@ -286,7 +286,7 @@ describe('ViewRelease Component', () => {
     renderComponentWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText('Test Release v1.0')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Release v1.0')[0]).toBeInTheDocument();
     });
 
     // Enter edit mode
@@ -321,7 +321,7 @@ describe('ViewRelease Component', () => {
 
     await waitFor(() => {
       expect(screen.getByText('All Releases')).toBeInTheDocument();
-      expect(screen.getByText('Test Release v1.0')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Release v1.0').length).toBeGreaterThan(0);
     });
   });
 
@@ -334,7 +334,7 @@ describe('ViewRelease Component', () => {
     renderComponentWithRouter();
 
     await waitFor(() => {
-      expect(screen.getByText('Test Release v1.0')).toBeInTheDocument();
+      expect(screen.getAllByText('Test Release v1.0')[0]).toBeInTheDocument();
     });
 
     // Enter edit mode
