@@ -5,17 +5,26 @@ import {
   Button,
   Typography,
   Paper,
-//   MenuItem,
   Stack,
   FormControlLabel,
   Checkbox,
   FormGroup,
   Divider,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { useNavigate } from "react-router-dom";
+import { apiService } from "../../services/api";
+import BreadcrumbNav from "../common/BreadcrumbNav";
 
 export default function NewReleaseForm() {
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  
   const [formData, setFormData] = useState({
     releaseName: "",
     version: "",
@@ -49,27 +58,44 @@ export default function NewReleaseForm() {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Combine form data and checklist for database storage
-    const releaseData = {
-      ...formData,
-      checklist: checklist,
+    try {
+      setLoading(true);
+      setError(null);
+      
       // Calculate completion percentage
-      checklistProgress: {
+      const checklistProgress = {
         total: Object.keys(checklist).length,
         completed: Object.values(checklist).filter(Boolean).length,
         percentage: Math.round(
           (Object.values(checklist).filter(Boolean).length / 
            Object.keys(checklist).length) * 100
         ),
-      },
-    };
-    
-    console.log("Release data ready for database:", releaseData);
-    // Add your API call here to save to database
-    // Example: await fetch('/api/releases', { method: 'POST', body: JSON.stringify(releaseData) })
+      };
+      
+      // Combine form data and checklist for database storage
+      const releaseData = {
+        releaseName: formData.releaseName,
+        version: formData.version,
+        releaseDate: formData.releaseDate,
+        remarks: formData.remarks || undefined,
+        checklist: checklist,
+        checklistProgress: checklistProgress,
+      };
+      
+      // Create the release
+      const newRelease = await apiService.createRelease(releaseData);
+      
+      // Navigate to the created release detail page
+      navigate(`/releases/${newRelease.id}`);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create release');
+      console.error('Error creating release:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleCancel = () => {
@@ -109,9 +135,31 @@ export default function NewReleaseForm() {
           width: "100%",
         }}
       >
+        <Box sx={{ mb: 3 }}>
+          <Button
+            startIcon={<ArrowBackIcon />}
+            onClick={() => navigate('/')}
+            sx={{ mb: 2 }}
+          >
+            Back to Releases
+          </Button>
+          <BreadcrumbNav
+            items={[
+              { label: "All Releases" },
+              { label: "New Release", isActive: true },
+            ]}
+          />
+        </Box>
+
         <Typography variant="h4" component="h1" gutterBottom sx={{ mb: 3 }}>
           Create New Release
         </Typography>
+
+        {error && (
+          <Alert severity="error" sx={{ mb: 3 }} onClose={() => setError(null)}>
+            {error}
+          </Alert>
+        )}
 
         <form onSubmit={handleSubmit}>
           <Stack spacing={3}>
@@ -245,10 +293,11 @@ export default function NewReleaseForm() {
                 type="submit"
                 variant="contained"
                 color="primary"
-                startIcon={<SaveIcon />}
+                startIcon={loading ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
                 fullWidth
+                disabled={loading}
               >
-                Create Release
+                {loading ? 'Creating...' : 'Create Release'}
               </Button>
               <Button
                 type="button"
@@ -257,6 +306,7 @@ export default function NewReleaseForm() {
                 startIcon={<CancelIcon />}
                 onClick={handleCancel}
                 fullWidth
+                disabled={loading}
               >
                 Cancel
               </Button>

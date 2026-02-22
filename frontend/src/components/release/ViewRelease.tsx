@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Paper,
@@ -19,38 +19,30 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  CircularProgress,
+  Alert,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import SaveIcon from "@mui/icons-material/Save";
 import CancelIcon from "@mui/icons-material/Cancel";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import BreadcrumbNav from "../common/BreadcrumbNav";
+import { apiService, type Release } from "../../services/api";
 
 export default function ViewRelease() {
   const navigate = useNavigate();
+  const { id } = useParams<{ id: string }>();
   const [isEditing, setIsEditing] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
-  // Mock data - replace with actual data from API/props
-  const [releaseData, setReleaseData] = useState({
-    releaseName: "Version 1.0.1",
-    version: "1.0.1",
-    releaseDate: "2026-02-22",
-    remarks: "Initial release with core features",
-    checklist: {
-      prsMerged: true,
-      changelogUpdated: true,
-      testsPassing: true,
-      githubReleaseCreated: false,
-      deployedDemo: false,
-      testedDemo: false,
-      deployedProduction: false,
-    },
-  });
+  const [releaseData, setReleaseData] = useState<Release | null>(null);
 
-  const [editedData, setEditedData] = useState(releaseData);
+  const [editedData, setEditedData] = useState<Partial<Release>>({});
 
   const checklistItems = [
     { key: "prsMerged", label: "All relevant GitHub pull requests have been merged" },
@@ -62,6 +54,27 @@ export default function ViewRelease() {
     { key: "deployedProduction", label: "Deployed in production" },
   ];
 
+  useEffect(() => {
+    const fetchRelease = async () => {
+      try {
+        setLoading(true);
+        const data = await apiService.getReleaseById(parseInt(id!));
+        setReleaseData(data);
+        setEditedData(data);
+        setError(null);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch release');
+        console.error('Error fetching release:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (id) {
+      fetchRelease();
+    }
+  }, [id]);
+
   const calculateProgress = (checklist: Record<string, boolean>) => {
     const total = Object.keys(checklist).length;
     const completed = Object.values(checklist).filter(Boolean).length;
@@ -72,14 +85,16 @@ export default function ViewRelease() {
     };
   };
 
-  const progress = calculateProgress(releaseData.checklist);
+  const progress = releaseData ? calculateProgress(releaseData.checklist) : { total: 7, completed: 0, percentage: 0 };
 
   const handleCheckboxChange = (key: string) => {
+    if (!editedData.checklist) return;
+    
     setEditedData((prev) => ({
       ...prev,
       checklist: {
-        ...prev.checklist,
-        [key]: !prev.checklist[key as keyof typeof prev.checklist],
+        ...prev.checklist!,
+        [key]: !prev.checklist![key as keyof typeof prev.checklist],
       },
     }));
   };
@@ -96,15 +111,47 @@ export default function ViewRelease() {
     setIsEditing(true);
   };
 
-  const handleSave = () => {
-    setReleaseData(editedData);
-    setIsEditing(false);
-    console.log("Updated release data:", editedData);
-    // Add API call here to save changes
+  const handleSave = async () => {
+    if (!releaseData || !editedData.checklist) return;
+    
+    setSaving(true);
+    setError(null);
+    
+    try {
+      // Calculate new progress
+      const checklistProgress = {
+        total: Object.keys(editedData.checklist).length,
+        completed: Object.values(editedData.checklist).filter(Boolean).length,
+        percentage: Math.round(
+          (Object.values(editedData.checklist).filter(Boolean).length / 
+           Object.keys(editedData.checklist).length) * 100
+        ),
+      };
+      
+      const updatedRelease = await apiService.updateRelease(releaseData.id, {
+        releaseName: editedData.releaseName,
+        version: editedData.version,
+        releaseDate: editedData.releaseDate,
+        remarks: editedData.remarks || '',
+        checklist: editedData.checklist!,
+        checklistProgress,
+      });
+      
+      setReleaseData(updatedRelease);
+      setEditedData(updatedRelease);
+      setIsEditing(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to update release');
+      console.error('Error updating release:', err);
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
-    setEditedData(releaseData);
+    if (releaseData) {
+      setEditedData(releaseData);
+    }
     setIsEditing(false);
   };
 
@@ -112,11 +159,18 @@ export default function ViewRelease() {
     setOpenDeleteDialog(true);
   };
 
-  const handleDeleteConfirm = () => {
-    console.log("Deleting release:", releaseData);
-    // Add API call here to delete the release
-    setOpenDeleteDialog(false);
-    navigate("/");
+  const handleDeleteConfirm = async () => {
+    if (!releaseData) return;
+    
+    try {
+      await apiService.deleteRelease(releaseData.id);
+      setOpenDeleteDialog(false);
+      navigate("/");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to delete release');
+      console.error('Error deleting release:', err);
+      setOpenDeleteDialog(false);
+    }
   };
 
   const handleDeleteCancel = () => {
@@ -128,6 +182,32 @@ export default function ViewRelease() {
     if (percentage >= 50) return "warning";
     return "error";
   };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (error || !releaseData) {
+    return (
+      <Box p={4}>
+        <Alert severity="error">
+          {error || 'Release not found'}
+        </Alert>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate("/")}
+          variant="outlined"
+          sx={{ mt: 2 }}
+        >
+          Back to Releases
+        </Button>
+      </Box>
+    );
+  }
 
   return (
     <Box sx={{ p: 4, maxWidth: 1200, mx: "auto" }}>
@@ -171,18 +251,20 @@ export default function ViewRelease() {
         ) : (
           <Stack direction="row" spacing={2}>
             <Button
-              startIcon={<SaveIcon />}
+              startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
               variant="contained"
               color="primary"
               onClick={handleSave}
+              disabled={saving}
             >
-              Save Changes
+              {saving ? 'Saving...' : 'Save Changes'}
             </Button>
             <Button
               startIcon={<CancelIcon />}
               variant="outlined"
               color="secondary"
               onClick={handleCancel}
+              disabled={saving}
             >
               Cancel
             </Button>
@@ -345,7 +427,7 @@ export default function ViewRelease() {
                     <Checkbox
                       checked={
                         isEditing
-                          ? editedData.checklist[item.key as keyof typeof editedData.checklist]
+                          ? editedData.checklist?.[item.key as keyof typeof editedData.checklist] || false
                           : releaseData.checklist[item.key as keyof typeof releaseData.checklist]
                       }
                       onChange={() => handleCheckboxChange(item.key)}
