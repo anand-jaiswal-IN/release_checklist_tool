@@ -27,7 +27,7 @@ describe('API Service', () => {
   describe('API Methods', () => {
     beforeEach(() => {
       vi.clearAllMocks();
-      global.fetch = vi.fn();
+      vi.stubGlobal('fetch', vi.fn());
     });
 
     it('should have getAllReleases method', async () => {
