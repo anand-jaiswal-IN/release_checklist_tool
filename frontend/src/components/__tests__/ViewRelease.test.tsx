@@ -4,32 +4,32 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import ViewRelease from '../release/ViewRelease';
 import { mockRelease } from '../../test/mockData';
-import * as apiModule from '../../services/api';
+import { apiService } from '../../services/api';
 
 // Mock the apiService
-vi.mock('../../services/api');
+vi.mock('../../services/api', () => ({
+  apiService: {
+    getReleaseById: vi.fn(),
+    updateRelease: vi.fn(),
+    deleteRelease: vi.fn(),
+  },
+  calculateReleaseStatus: (completed: number, total: number) => {
+    if (completed === 0) return 'planned';
+    if (completed === total) return 'done';
+    return 'ongoing';
+  },
+}));
 
 // Mock react-router-dom navigate  
 const mockNavigate = vi.fn();
-vi.mock('react-router-dom', async (importOriginal) => {
-  const actual = await importOriginal();
+vi.mock('react-router-dom', async () => {
+  const actual = await import('react-router-dom');
   return {
     ...actual,
-    useNavig
-
-ate: () => mockNavigate,
+    useNavigate: () => mockNavigate,
+    useParams: () => ({ id: '1' }),
   };
 });
-
-const mockApiService = {
-  getReleaseById: vi.fn(),
-  updateRelease: vi.fn(),
-  deleteRelease: vi.fn(),
-};
-
-vi.mocked(apiModule.apiService).getReleaseById = mockApiService.getReleaseById as ReturnType<typeof vi.fn>;
-vi.mocked(apiModule.apiService).updateRelease = mockApiService.updateRelease as ReturnType<typeof vi.fn>;
-vi.mocked(apiModule.apiService).deleteRelease = mockApiService.deleteRelease as ReturnType<typeof vi.fn>;
 
 const renderComponentWithRouter = () => {
   return render(
@@ -47,7 +47,6 @@ describe('ViewRelease Component', () => {
   });
 
   it('should show loading state initially', async () => {
-    const { apiService } = await import('../../services/api');
     const mockApiService = vi.mocked(apiService);
     mockApiService.getReleaseById.mockReturnValue(new Promise(() => {}));
 
@@ -57,7 +56,6 @@ describe('ViewRelease Component', () => {
   });
 
   it('should render release details after loading', async () => {
-    const { apiService } = await import('../../services/api');
     const mockApiService = vi.mocked(apiService);
     mockApiService.getReleaseById.mockResolvedValue(mockRelease);
 

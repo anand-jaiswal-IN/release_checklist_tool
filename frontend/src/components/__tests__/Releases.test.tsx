@@ -18,9 +18,6 @@ vi.mock('../../services/api', () => ({
   },
 }));
 
-// Mock window.confirm
-window.confirm = vi.fn(() => true);
-
 const renderWithRouter = (component: React.ReactElement) => {
   return render(<BrowserRouter>{component}</BrowserRouter>);
 };
@@ -28,7 +25,10 @@ const renderWithRouter = (component: React.ReactElement) => {
 describe('Releases Component', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Mock window.confirm
+    window.confirm = vi.fn(() => true) as unknown as typeof window.confirm;
   });
+
 
   it('should render loading state initially', () => {
     const mockApiService = vi.mocked(apiModule.apiService);
