@@ -15,7 +15,7 @@ import RemoveRedEye from "@mui/icons-material/RemoveRedEye";
 import Delete from "@mui/icons-material/Delete";
 
 import { Link } from "react-router-dom";
-import { apiService, type Release } from "../services/api";
+import { apiService, type Release, calculateReleaseStatus, type ReleaseStatus } from "../services/api";
 
 export default function ReleasesTable() {
   const [releases, setReleases] = useState<Release[]>([]);
@@ -59,6 +59,17 @@ export default function ReleasesTable() {
     return "error";
   };
 
+  const getStatusChipColor = (status: ReleaseStatus): "default" | "warning" | "success" => {
+    switch (status) {
+      case 'planned':
+        return 'default';
+      case 'ongoing':
+        return 'warning';
+      case 'done':
+        return 'success';
+    }
+  };
+
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" p={4}>
@@ -96,6 +107,9 @@ export default function ReleasesTable() {
               Date
             </TableCell>
             <TableCell align="right" sx={{ fontWeight: "bold" }}>
+              Status
+            </TableCell>
+            <TableCell align="right" sx={{ fontWeight: "bold" }}>
               Progress
             </TableCell>
             <TableCell align="right" sx={{ fontWeight: "bold" }}>
@@ -104,41 +118,54 @@ export default function ReleasesTable() {
           </TableRow>
         </TableHead>
         <TableBody>
-          {releases.map((release) => (
-            <TableRow
-              key={release.id}
-              sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-            >
-              <TableCell component="th" scope="row">
-                {release.releaseName}
-              </TableCell>
-              <TableCell align="right">{release.version}</TableCell>
-              <TableCell align="right">
-                {new Date(release.releaseDate).toLocaleDateString()}
-              </TableCell>
-              <TableCell align="right">
-                <Chip
-                  label={`${release.checklistProgress.percentage}%`}
-                  color={getStatusColor(release.checklistProgress.percentage)}
-                  size="small"
-                />
-              </TableCell>
-              <TableCell align="right">
-                <Link to={`/releases/${release.id}`}>
-                  <IconButton size="small" color="primary">
-                    <RemoveRedEye />
+          {releases.map((release) => {
+            const status = calculateReleaseStatus(
+              release.checklistProgress.completed,
+              release.checklistProgress.total
+            );
+            return (
+              <TableRow
+                key={release.id}
+                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+              >
+                <TableCell component="th" scope="row">
+                  {release.releaseName}
+                </TableCell>
+                <TableCell align="right">{release.version}</TableCell>
+                <TableCell align="right">
+                  {new Date(release.releaseDate).toLocaleDateString()}
+                </TableCell>
+                <TableCell align="right">
+                  <Chip
+                    label={status.toUpperCase()}
+                    color={getStatusChipColor(status)}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell align="right">
+                  <Chip
+                    label={`${release.checklistProgress.percentage}%`}
+                    color={getStatusColor(release.checklistProgress.percentage)}
+                    size="small"
+                  />
+                </TableCell>
+                <TableCell align="right">
+                  <Link to={`/releases/${release.id}`}>
+                    <IconButton size="small" color="primary">
+                      <RemoveRedEye />
+                    </IconButton>
+                  </Link>
+                  <IconButton
+                    size="small"
+                    color="error"
+                    onClick={() => handleDelete(release.id)}
+                  >
+                    <Delete />
                   </IconButton>
-                </Link>
-                <IconButton
-                  size="small"
-                  color="error"
-                  onClick={() => handleDelete(release.id)}
-                >
-                  <Delete />
-                </IconButton>
-              </TableCell>
-            </TableRow>
-          ))}
+                </TableCell>
+              </TableRow>
+            );
+          })}
         </TableBody>
       </Table>
     </TableContainer>

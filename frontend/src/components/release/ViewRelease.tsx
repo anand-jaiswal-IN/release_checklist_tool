@@ -29,7 +29,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { useNavigate, useParams } from "react-router-dom";
 import BreadcrumbNav from "../common/BreadcrumbNav";
-import { apiService, type Release } from "../../services/api";
+import { apiService, type Release, calculateReleaseStatus, type ReleaseStatus } from "../../services/api";
 
 export default function ViewRelease() {
   const navigate = useNavigate();
@@ -86,6 +86,17 @@ export default function ViewRelease() {
   };
 
   const progress = releaseData ? calculateProgress(releaseData.checklist) : { total: 7, completed: 0, percentage: 0 };
+
+  const getStatusChipColor = (status: ReleaseStatus): "default" | "warning" | "success" => {
+    switch (status) {
+      case 'planned':
+        return 'default';
+      case 'ongoing':
+        return 'warning';
+      case 'done':
+        return 'success';
+    }
+  };
 
   const handleCheckboxChange = (key: string) => {
     if (!editedData.checklist) return;
@@ -332,6 +343,26 @@ export default function ViewRelease() {
                       Version
                     </Typography>
                     <Typography variant="h6">{releaseData.version}</Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Status
+                    </Typography>
+                    <Box sx={{ mt: 1 }}>
+                      <Chip
+                        label={calculateReleaseStatus(
+                          releaseData.checklistProgress.completed,
+                          releaseData.checklistProgress.total
+                        ).toUpperCase()}
+                        color={getStatusChipColor(
+                          calculateReleaseStatus(
+                            releaseData.checklistProgress.completed,
+                            releaseData.checklistProgress.total
+                          )
+                        )}
+                        size="medium"
+                      />
+                    </Box>
                   </Box>
                   <Box>
                     <Typography variant="caption" color="text.secondary">

@@ -1,5 +1,7 @@
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
+export type ReleaseStatus = 'planned' | 'ongoing' | 'done';
+
 export interface Release {
   id: number;
   releaseName: string;
@@ -23,6 +25,13 @@ export interface Release {
   createdAt: string;
   updatedAt: string;
 }
+
+// Helper function to calculate release status based on checklist progress
+export const calculateReleaseStatus = (completed: number, total: number): ReleaseStatus => {
+  if (completed === 0) return 'planned';
+  if (completed === total) return 'done';
+  return 'ongoing';
+};
 
 export interface NewReleaseData {
   releaseName: string;
