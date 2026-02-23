@@ -35,10 +35,13 @@ app.onError((err, c) => {
 });
 
 const port = parseInt(process.env.PORT || '5000');
+const host = process.env.HOST || '0.0.0.0';
 
-console.log(`🚀 Server running on http://localhost:${port}`);
+console.log(`🚀 Server running on http://${host}:${port}`);
+console.log(`📍 Health check: http://${host}:${port}/health`);
 
 export default {
   port,
+  hostname: host,
   fetch: app.fetch,
 };

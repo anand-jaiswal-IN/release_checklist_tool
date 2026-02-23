@@ -3,6 +3,9 @@ FROM node:24.13.1-alpine AS build
 
 WORKDIR /app
 
+# Accept build argument
+ARG VITE_API_URL=/api
+
 # Copy package files
 COPY package*.json ./
 
@@ -11,6 +14,9 @@ RUN npm install
 
 # Copy application code
 COPY . .
+
+# Set environment variable for Vite build
+ENV VITE_API_URL=$VITE_API_URL
 
 # Build the application
 RUN npm run build
