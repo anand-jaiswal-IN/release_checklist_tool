@@ -13,8 +13,9 @@ FROM base AS release
 COPY --from=install /app/node_modules ./node_modules
 COPY . .
 
-# Make entrypoint script executable
-RUN chmod +x docker-entrypoint.sh
+# Fix line endings and make entrypoint script executable
+RUN sed -i 's/\r$//' docker-entrypoint.sh && \
+    chmod +x docker-entrypoint.sh
 
 # Expose the port
 EXPOSE 5000
