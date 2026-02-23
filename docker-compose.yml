@@ -32,6 +32,7 @@ services:
       PORT: 5000
       DATABASE_URL: postgresql://postgres:password@db:5432/release_checklist_tool
       NODE_ENV: production
+      ALLOWED_ORIGINS: http://localhost:5173,http://localhost:3000,http://localhost:80,http://localhost,http://104.214.186.245
     ports:
       - "5000:5000"
     depends_on:
