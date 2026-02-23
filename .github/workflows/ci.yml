@@ -43,7 +43,28 @@ jobs:
         run: bun run db:migrate
         env:
           DATABASE_URL: postgresql://postgres:password@localhost:5432/release_checklist_tool
-      
+
+      - name: Start backend server
+        working-directory: ./backend
+        run: bun run start &
+
+      - name: Wait for backend to be ready
+        run: |
+          for i in {1..10}; do
+            if nc -z localhost 5000; then
+              echo "Backend is up!";
+              break;
+            fi;
+            echo "Waiting for backend...";
+            sleep 2;
+          done
+
+      - name: Run tests
+        working-directory: ./backend
+        run: bun test
+        env:
+          DATABASE_URL: postgresql://postgres:password@localhost:5432/release_checklist_tool
+
       - name: Run tests
         working-directory: ./backend
         run: bun test
