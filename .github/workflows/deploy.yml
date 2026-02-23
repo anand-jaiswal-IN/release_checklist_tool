@@ -20,7 +20,7 @@ jobs:
           username: ${{ secrets.AZURE_VM_USERNAME }}
           key: ${{ secrets.AZURE_VM_SSH_KEY }}
           script: |
-            cd /home/${{ secrets.AZURE_VM_USERNAME }}/release-checklist-tool
+            cd /home/${{ secrets.AZURE_VM_USERNAME }}/app/release-checklist-tool
             git pull origin main
             docker compose down
             docker compose up -d --build
